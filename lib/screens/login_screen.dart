@@ -4,9 +4,6 @@ import 'package:flash_chat/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'contact_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-final _firestore = FirebaseFirestore.instance;
 
 class LoginScreen extends StatefulWidget {
   static String id = 'login_screen';
@@ -34,22 +31,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (userCredential != null) {
         emailTextController.clear();
         passwordTextController.clear();
-        _firestore
-            .collection('users')
-            .where('email', isEqualTo: email)
-            .get()
-            .then((response) {
-          _firestore
-              .collection('users')
-              .doc(response.docs.first.id)
-              .update({'lastLoggedIn': Timestamp.now()}).then((val) {
-            setState(() {
-              showSpinner = false;
-              loginError = false;
-            });
-            Navigator.pushNamed(context, ContactsScreen.id);
-          }).catchError((error) => print("Failed to update data: $error"));
-        }).catchError((error) => print("Failed to get data: $error"));
+        setState(() {
+          showSpinner = false;
+          loginError = false;
+        });
+        Navigator.popAndPushNamed(context, ContactsScreen.id);
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {

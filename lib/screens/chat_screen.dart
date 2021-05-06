@@ -56,7 +56,6 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: null,
-        automaticallyImplyLeading: false,
         actions: <Widget>[
           IconButton(
               icon: Icon(Icons.logout),
