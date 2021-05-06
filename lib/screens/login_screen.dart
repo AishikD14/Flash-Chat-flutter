@@ -32,6 +32,8 @@ class _LoginScreenState extends State<LoginScreen> {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
       if (userCredential != null) {
+        emailTextController.clear();
+        passwordTextController.clear();
         _firestore
             .collection('users')
             .where('email', isEqualTo: email)
@@ -101,6 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     )
                   : Container(),
               TextField(
+                controller: emailTextController,
                 keyboardType: TextInputType.emailAddress,
                 textAlign: TextAlign.center,
                 onChanged: (value) {
@@ -115,6 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 8.0,
               ),
               TextField(
+                controller: passwordTextController,
                 obscureText: true,
                 textAlign: TextAlign.center,
                 onChanged: (value) {
