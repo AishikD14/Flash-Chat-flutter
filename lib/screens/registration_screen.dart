@@ -3,7 +3,11 @@ import 'package:flash_chat/components/rounded_button.dart';
 import 'package:flash_chat/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_screen.dart';
+import 'login_screen.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+final _firestore = FirebaseFirestore.instance;
 
 class RegistrationScreen extends StatefulWidget {
   static String id = 'register_screen';
@@ -20,9 +24,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   String name = '';
   bool registerError = false;
   String errorText = 'An error occurred';
+  final emailTextController = TextEditingController();
+  final passwordTextController = TextEditingController();
+  final nameTextController = TextEditingController();
 
   bool checkIfEmpty() {
-    print('$email,$name,$password');
+    // print('$email,$name,$password');
     if (email == '' || name == '' || password == '') {
       setState(() {
         registerError = true;
@@ -31,6 +38,60 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       return true;
     }
     return false;
+  }
+
+  registerUser() async {
+    if (checkIfEmpty()) {
+      return;
+    }
+    setState(() {
+      showSpinner = true;
+    });
+    try {
+      final newUser = await _auth.createUserWithEmailAndPassword(
+          email: email, password: password);
+      if (newUser != null) {
+        emailTextController.clear();
+        passwordTextController.clear();
+        nameTextController.clear();
+        _firestore.collection('users').add({
+          'email': email,
+          'userName': name,
+          'status': 'Hey there, I am using Flash Chat !',
+        }).then((val) {
+          setState(() {
+            showSpinner = false;
+            registerError = false;
+          });
+          Navigator.pushNamed(context, LoginScreen.id);
+        }).catchError((error) {
+          print("Failed to add user: $error");
+          setState(() {
+            showSpinner = false;
+            registerError = true;
+          });
+        });
+      }
+    } on FirebaseAuthException catch (e) {
+      var error = 'An error occurred. Please try again';
+      if (e.code == 'weak-password') {
+        error = 'The password provided is too weak.';
+      } else if (e.code == 'email-already-in-use') {
+        error = 'The account already exists for that email.';
+      } else if (e.code == 'invalid-email') {
+        error = 'The email id is invalid.';
+      }
+      setState(() {
+        showSpinner = false;
+        registerError = true;
+        errorText = error;
+      });
+    } catch (e) {
+      setState(() {
+        showSpinner = false;
+        registerError = true;
+      });
+    }
   }
 
   @override
@@ -72,6 +133,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     )
                   : Container(),
               TextField(
+                controller: emailTextController,
                 keyboardType: TextInputType.emailAddress,
                 textAlign: TextAlign.center,
                 onChanged: (value) {
@@ -86,6 +148,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 height: 8.0,
               ),
               TextField(
+                controller: passwordTextController,
                 obscureText: true,
                 textAlign: TextAlign.center,
                 onChanged: (value) {
@@ -100,6 +163,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 height: 8.0,
               ),
               TextField(
+                controller: nameTextController,
                 textAlign: TextAlign.center,
                 onChanged: (value) {
                   //Do something with the user input.
@@ -115,38 +179,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               RoundedButton(
                 colour: Colors.blueAccent,
                 buttonText: 'Register',
-                onPress: () async {
-                  if (checkIfEmpty()) {
-                    return;
-                  }
-                  setState(() {
-                    showSpinner = true;
-                  });
-                  try {
-                    final newUser = await _auth.createUserWithEmailAndPassword(
-                        email: email, password: password);
-                    if (newUser != null) {
-                      setState(() {
-                        showSpinner = false;
-                        registerError = false;
-                      });
-                      Navigator.pushNamed(context, ChatScreen.id);
-                    }
-                  } on FirebaseAuthException catch (e) {
-                    var error;
-                    if (e.code == 'weak-password') {
-                      error = 'The password provided is too weak.';
-                    } else if (e.code == 'email-already-in-use') {
-                      error = 'The account already exists for that email.';
-                    }
-                    setState(() {
-                      showSpinner = false;
-                      registerError = true;
-                      errorText = error;
-                    });
-                  } catch (e) {
-                    print(e);
-                  }
+                onPress: () {
+                  registerUser();
                 },
               ),
             ],

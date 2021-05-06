@@ -3,7 +3,10 @@ import 'package:flash_chat/components/rounded_button.dart';
 import 'package:flash_chat/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
-import 'chat_screen.dart';
+import 'contact_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+final _firestore = FirebaseFirestore.instance;
 
 class LoginScreen extends StatefulWidget {
   static String id = 'login_screen';
@@ -18,6 +21,46 @@ class _LoginScreenState extends State<LoginScreen> {
   String email;
   String password;
   bool loginError = false;
+  final emailTextController = TextEditingController();
+  final passwordTextController = TextEditingController();
+
+  loginUser() async {
+    setState(() {
+      showSpinner = true;
+    });
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: email, password: password);
+      if (userCredential != null) {
+        _firestore
+            .collection('users')
+            .where('email', isEqualTo: email)
+            .get()
+            .then((response) {
+          _firestore
+              .collection('users')
+              .doc(response.docs.first.id)
+              .update({'lastLoggedIn': Timestamp.now()}).then((val) {
+            setState(() {
+              showSpinner = false;
+              loginError = false;
+            });
+            Navigator.pushNamed(context, ContactsScreen.id);
+          }).catchError((error) => print("Failed to update data: $error"));
+        }).catchError((error) => print("Failed to get data: $error"));
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        print('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        print('Wrong password provided for that user.');
+      }
+      setState(() {
+        showSpinner = false;
+        loginError = true;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,32 +131,8 @@ class _LoginScreenState extends State<LoginScreen> {
               RoundedButton(
                 colour: Colors.lightBlueAccent,
                 buttonText: 'Log In',
-                onPress: () async {
-                  setState(() {
-                    showSpinner = true;
-                  });
-                  try {
-                    UserCredential userCredential =
-                        await _auth.signInWithEmailAndPassword(
-                            email: email, password: password);
-                    if (userCredential != null) {
-                      setState(() {
-                        showSpinner = false;
-                        loginError = false;
-                      });
-                      Navigator.pushNamed(context, ChatScreen.id);
-                    }
-                  } on FirebaseAuthException catch (e) {
-                    if (e.code == 'user-not-found') {
-                      print('No user found for that email.');
-                    } else if (e.code == 'wrong-password') {
-                      print('Wrong password provided for that user.');
-                    }
-                    setState(() {
-                      showSpinner = false;
-                      loginError = true;
-                    });
-                  }
+                onPress: () {
+                  loginUser();
                 },
               ),
             ],
