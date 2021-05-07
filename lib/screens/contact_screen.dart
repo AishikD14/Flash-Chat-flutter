@@ -194,7 +194,9 @@ class ContactBubble extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Text('Last message'),
+                    LastMessage(
+                      contactEmail: contactEmail,
+                    ),
                   ],
                 ),
               ),
@@ -207,6 +209,70 @@ class ContactBubble extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class LastMessage extends StatefulWidget {
+  final String contactEmail;
+
+  LastMessage({this.contactEmail});
+
+  @override
+  _LastMessageState createState() => _LastMessageState();
+}
+
+class _LastMessageState extends State<LastMessage> {
+  String lastMessage;
+  //
+  // void getLastMessage() async {
+  //   DocumentSnapshot val = await _firestore
+  //       .collection('rooms')
+  //       .doc(GetRoomId().getRoomId(widget.contactEmail))
+  //       .get();
+  //   setState(() {
+  //     if (val.exists) {
+  //       if (val.data()['lastMessage'] != null) {
+  //         lastMessage = val.data()['lastMessage'];
+  //       } else {
+  //         lastMessage = 'No previous message';
+  //       }
+  //     } else {
+  //       lastMessage = 'No previous message';
+  //     }
+  //   });
+  // }
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: _firestore
+          .collection('rooms')
+          .doc(GetRoomId().getRoomId(widget.contactEmail))
+          .snapshots(),
+      builder: (context, snapshot) {
+        try {
+          lastMessage = snapshot.data['lastMessage'];
+        } catch (e) {
+          return Text(
+            'No previous message',
+            style: TextStyle(
+              color: Colors.grey,
+            ),
+          );
+        }
+        return Text(
+          lastMessage,
+          style: TextStyle(
+            color: Colors.grey,
+          ),
+        );
+      },
     );
   }
 }

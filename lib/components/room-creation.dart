@@ -3,9 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 
+final _firestore = FirebaseFirestore.instance;
+final _auth = FirebaseAuth.instance;
+
 class RoomCreation {
-  final _firestore = FirebaseFirestore.instance;
-  final _auth = FirebaseAuth.instance;
   String email;
   String roomId;
   String users;
@@ -16,14 +17,8 @@ class RoomCreation {
 
   Future<String> goToRoom(
       String name, String contactName, String contactEmail) async {
-    if (contactEmail.toLowerCase().compareTo(email.toLowerCase()) == 1) {
-      roomId = email + contactEmail;
-      users = name + '|' + contactName;
-    } else {
-      roomId = contactEmail + email;
-      users = contactName + '|' + name;
-    }
-    roomId = sha256.convert(utf8.encode(roomId)).toString();
+    roomId = GetRoomId().getRoomId(contactEmail);
+    users = GetRoomId().getUsersInRoom(name, contactName, contactEmail);
 
     DocumentSnapshot room =
         await _firestore.collection('rooms').doc(roomId).get();
@@ -45,5 +40,34 @@ class RoomCreation {
     } else {
       return roomId;
     }
+  }
+}
+
+class GetRoomId {
+  String email;
+  String roomId;
+  String users;
+
+  GetRoomId() {
+    email = _auth.currentUser.email;
+  }
+
+  String getRoomId(contactEmail) {
+    if (contactEmail.toLowerCase().compareTo(email.toLowerCase()) == 1) {
+      roomId = email + contactEmail;
+    } else {
+      roomId = contactEmail + email;
+    }
+    roomId = sha256.convert(utf8.encode(roomId)).toString();
+    return roomId;
+  }
+
+  String getUsersInRoom(name, contactName, contactEmail) {
+    if (contactEmail.toLowerCase().compareTo(email.toLowerCase()) == 1) {
+      users = name + '|' + contactName;
+    } else {
+      users = contactName + '|' + name;
+    }
+    return users;
   }
 }

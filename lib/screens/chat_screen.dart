@@ -121,6 +121,9 @@ class _ChatScreenState extends State<ChatScreen> {
                         'sender': email,
                         'time': Timestamp.now(),
                       });
+                      _firestore.collection('rooms').doc(room).update({
+                        'lastMessage': messageText,
+                      });
                     },
                     child: Text(
                       'Send',
