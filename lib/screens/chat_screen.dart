@@ -119,6 +119,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           .set({
                         'text': messageText,
                         'sender': email,
+                        'time': Timestamp.now(),
                       });
                     },
                     child: Text(
@@ -158,6 +159,7 @@ class MessageStream extends StatelessWidget {
         for (var message in messages) {
           final messageText = message.data()['text'];
           final messageSender = message.data()['sender'];
+          final messageTime = message.data()['time'];
           final currentUser = email;
           if (messageSender == 'System') {
             final messageBubble = SystemMessageBubble(
@@ -168,6 +170,7 @@ class MessageStream extends StatelessWidget {
             final messageBubble = MessageBubble(
               sender: currentUser == messageSender ? userName : contactName,
               text: messageText,
+              time: messageTime,
               isMe: currentUser == messageSender,
             );
             messageBubbles.add(messageBubble);
@@ -188,9 +191,10 @@ class MessageStream extends StatelessWidget {
 class MessageBubble extends StatelessWidget {
   final String sender;
   final String text;
+  final Timestamp time;
   final bool isMe;
 
-  MessageBubble({this.sender, this.text, this.isMe});
+  MessageBubble({this.sender, this.text, this.time, this.isMe});
 
   @override
   Widget build(BuildContext context) {
@@ -234,6 +238,20 @@ class MessageBubble extends StatelessWidget {
                   fontSize: 15.0,
                   color: isMe ? Colors.white : Colors.black54,
                 ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: isMe
+                ? EdgeInsets.only(right: 8.0, top: 8.0)
+                : EdgeInsets.only(left: 8.0, top: 8.0),
+            child: Text(
+              time.toDate().toLocal().hour.toString() +
+                  ':' +
+                  time.toDate().toLocal().minute.toString(),
+              style: TextStyle(
+                fontSize: 13.0,
+                color: Colors.grey,
               ),
             ),
           ),
