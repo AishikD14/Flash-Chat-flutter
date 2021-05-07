@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flash_chat/screens/welcome_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_screen.dart';
+import 'package:flash_chat/components/room-creation.dart';
 
 final _firestore = FirebaseFirestore.instance;
 String email;
+String name;
 
 class ContactsScreen extends StatefulWidget {
   static String id = 'contacts_screen';
@@ -26,6 +28,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
         .where('email', isEqualTo: email)
         .get()
         .then((response) {
+      name = response.docs.first.data()['userName'];
       _firestore
           .collection('users')
           .doc(response.docs.first.id)
@@ -126,9 +129,11 @@ class ContactsStream extends StatelessWidget {
           if (contact.data()['email'] == email) {
             continue;
           }
-          final userName = contact.data()['userName'];
+          final contactName = contact.data()['userName'];
+          final contactEmail = contact.data()['email'];
           final contactBubble = ContactBubble(
-            name: userName,
+            contactName: contactName,
+            contactEmail: contactEmail,
           );
           contactBubbles.add(contactBubble);
         }
@@ -142,16 +147,17 @@ class ContactsStream extends StatelessWidget {
 }
 
 class ContactBubble extends StatelessWidget {
-  final String name;
+  final String contactName;
+  final String contactEmail;
+  final RoomCreation room = RoomCreation();
 
-  ContactBubble({this.name});
+  ContactBubble({this.contactName, this.contactEmail});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Row(
-        // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           CircleAvatar(
             radius: 28.0,
@@ -159,23 +165,34 @@ class ContactBubble extends StatelessWidget {
           ),
           Expanded(
             child: GestureDetector(
-              onTap: () {
-                Navigator.pushNamed(context, ChatScreen.id);
+              behavior: HitTestBehavior.translucent,
+              onTap: () async {
+                String roomId =
+                    await room.goToRoom(name, contactName, contactEmail);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                      chatName: contactName,
+                      roomId: roomId,
+                    ),
+                  ),
+                );
               },
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      name,
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.bold,
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Text(
+                        contactName,
+                        style: TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      height: 8.0,
                     ),
                     Text('Last message'),
                   ],

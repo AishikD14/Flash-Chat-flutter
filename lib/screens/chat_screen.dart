@@ -9,6 +9,10 @@ User loggedInUser;
 
 class ChatScreen extends StatefulWidget {
   static String id = 'chat_screen';
+  final String chatName;
+  final String roomId;
+
+  ChatScreen({this.chatName, this.roomId});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -66,7 +70,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 Navigator.popAndPushNamed(context, WelcomeScreen.id);
               }),
         ],
-        title: Text('⚡️Chat'),
+        title: Text(widget.chatName),
         backgroundColor: Colors.lightBlueAccent,
       ),
       body: SafeArea(
