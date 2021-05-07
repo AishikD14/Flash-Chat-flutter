@@ -5,7 +5,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 final _firestore = FirebaseFirestore.instance;
-User loggedInUser;
+String email;
+String room;
+String contactName;
+String userName;
+bool group;
 
 class ChatScreen extends StatefulWidget {
   static String id = 'chat_screen';
@@ -24,14 +28,20 @@ class _ChatScreenState extends State<ChatScreen> {
   String messageText;
 
   void getCurrentUser() {
-    try {
-      final user = _auth.currentUser;
-      if (user != null) {
-        loggedInUser = user;
-      }
-    } catch (e) {
-      print(e);
-    }
+    email = _auth.currentUser.email;
+    _firestore
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .get()
+        .then((val) {
+      userName = val.docs.first.data()['userName'];
+    }).catchError((error) => print("Failed to get data: $error"));
+  }
+
+  void checkIfGroup() {
+    _firestore.collection('rooms').doc(room).get().then((val) {
+      group = val.data()['type'] == 'personal' ? false : true;
+    }).catchError((error) => print("Failed to get data: $error"));
   }
 
   // void getMessages() async {
@@ -53,6 +63,9 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     getCurrentUser();
+    room = widget.roomId;
+    checkIfGroup();
+    contactName = widget.chatName;
   }
 
   @override
@@ -99,11 +112,13 @@ class _ChatScreenState extends State<ChatScreen> {
                       messageTextController.clear();
                       //Implement send functionality.
                       _firestore
+                          .collection('rooms')
+                          .doc(room)
                           .collection('messages')
                           .doc(Timestamp.now().toString())
                           .set({
                         'text': messageText,
-                        'sender': loggedInUser.email,
+                        'sender': email,
                       });
                     },
                     child: Text(
@@ -125,7 +140,11 @@ class MessageStream extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('messages').snapshots(),
+      stream: _firestore
+          .collection('rooms')
+          .doc(room)
+          .collection('messages')
+          .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Center(
@@ -135,17 +154,24 @@ class MessageStream extends StatelessWidget {
           );
         }
         final messages = snapshot.data.docs.reversed;
-        List<MessageBubble> messageBubbles = [];
+        List<Widget> messageBubbles = [];
         for (var message in messages) {
           final messageText = message.data()['text'];
           final messageSender = message.data()['sender'];
-          final currentUser = loggedInUser.email;
-          final messageBubble = MessageBubble(
-            sender: messageSender,
-            text: messageText,
-            isMe: currentUser == messageSender,
-          );
-          messageBubbles.add(messageBubble);
+          final currentUser = email;
+          if (messageSender == 'System') {
+            final messageBubble = SystemMessageBubble(
+              text: messageText,
+            );
+            messageBubbles.add(messageBubble);
+          } else {
+            final messageBubble = MessageBubble(
+              sender: currentUser == messageSender ? userName : contactName,
+              text: messageText,
+              isMe: currentUser == messageSender,
+            );
+            messageBubbles.add(messageBubble);
+          }
         }
         return Expanded(
           child: ListView(
@@ -174,13 +200,17 @@ class MessageBubble extends StatelessWidget {
         crossAxisAlignment:
             isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          Text(
-            sender,
-            style: TextStyle(
-              fontSize: 12.0,
-              color: Colors.black54,
-            ),
-          ),
+          isMe
+              ? Container()
+              : group
+                  ? Text(
+                      sender,
+                      style: TextStyle(
+                        fontSize: 12.0,
+                        color: Colors.black54,
+                      ),
+                    )
+                  : Container(),
           Material(
             elevation: 5.0,
             borderRadius: isMe
@@ -203,6 +233,42 @@ class MessageBubble extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 15.0,
                   color: isMe ? Colors.white : Colors.black54,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class SystemMessageBubble extends StatelessWidget {
+  final String text;
+
+  SystemMessageBubble({this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(10.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Material(
+            elevation: 5.0,
+            borderRadius: BorderRadius.all(
+              Radius.circular(30.0),
+            ),
+            color: Colors.blueGrey,
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+              child: Text(
+                text + contactName,
+                style: TextStyle(
+                  fontSize: 15.0,
+                  color: Colors.white,
                 ),
               ),
             ),
