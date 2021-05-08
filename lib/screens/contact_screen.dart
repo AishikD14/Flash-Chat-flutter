@@ -1,9 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flash_chat/screens/welcome_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'welcome_screen.dart';
 import 'chat_screen.dart';
+import 'profile_screen.dart';
 import 'package:flash_chat/components/room-creation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 final _firestore = FirebaseFirestore.instance;
 String email;
@@ -52,14 +54,30 @@ class _ContactsScreenState extends State<ContactsScreen> {
         appBar: AppBar(
           automaticallyImplyLeading: false,
           actions: <Widget>[
-            IconButton(
-                icon: Icon(Icons.logout),
-                onPressed: () {
-                  //Implement logout functionality
+            PopupMenuButton(
+              onSelected: (value) {
+                if (value == 'Profile') {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => ProfileScreen()));
+                } else {
                   _auth.signOut();
-                  // // Navigator.pop(context);
                   Navigator.popAndPushNamed(context, WelcomeScreen.id);
-                }),
+                }
+              },
+              itemBuilder: (BuildContext context) {
+                return <PopupMenuEntry>[
+                  PopupMenuItem<String>(
+                    value: 'Profile',
+                    child: Text('Profile'),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'Logout',
+                    child: Text('Logout'),
+                  ),
+                ];
+              },
+              tooltip: 'Options',
+            ),
           ],
           bottom: TabBar(
             tabs: [
@@ -204,7 +222,9 @@ class ContactBubble extends StatelessWidget {
           ),
           Column(
             children: [
-              Text('Yesterday'),
+              LastMessageTime(
+                contactEmail: contactEmail,
+              ),
             ],
           ),
         ],
@@ -213,49 +233,20 @@ class ContactBubble extends StatelessWidget {
   }
 }
 
-class LastMessage extends StatefulWidget {
+class LastMessage extends StatelessWidget {
   final String contactEmail;
 
   LastMessage({this.contactEmail});
-
-  @override
-  _LastMessageState createState() => _LastMessageState();
-}
-
-class _LastMessageState extends State<LastMessage> {
-  String lastMessage;
-  //
-  // void getLastMessage() async {
-  //   DocumentSnapshot val = await _firestore
-  //       .collection('rooms')
-  //       .doc(GetRoomId().getRoomId(widget.contactEmail))
-  //       .get();
-  //   setState(() {
-  //     if (val.exists) {
-  //       if (val.data()['lastMessage'] != null) {
-  //         lastMessage = val.data()['lastMessage'];
-  //       } else {
-  //         lastMessage = 'No previous message';
-  //       }
-  //     } else {
-  //       lastMessage = 'No previous message';
-  //     }
-  //   });
-  // }
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: _firestore
           .collection('rooms')
-          .doc(GetRoomId().getRoomId(widget.contactEmail))
+          .doc(GetRoomId().getRoomId(contactEmail))
           .snapshots(),
       builder: (context, snapshot) {
+        String lastMessage;
         try {
           lastMessage = snapshot.data['lastMessage'];
         } catch (e) {
@@ -270,6 +261,42 @@ class _LastMessageState extends State<LastMessage> {
           lastMessage,
           style: TextStyle(
             color: Colors.grey,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class LastMessageTime extends StatelessWidget {
+  final String contactEmail;
+
+  LastMessageTime({this.contactEmail});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: _firestore
+          .collection('rooms')
+          .doc(GetRoomId().getRoomId(contactEmail))
+          .snapshots(),
+      builder: (context, snapshot) {
+        Timestamp lastMessageTime;
+        try {
+          lastMessageTime = snapshot.data['lastMessageTime'];
+        } catch (e) {
+          return Text(
+            '',
+            style: TextStyle(
+              color: Colors.grey,
+            ),
+          );
+        }
+        return Text(
+          DateFormat('h:mm a').format(lastMessageTime.toDate()),
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: 13.0,
           ),
         );
       },

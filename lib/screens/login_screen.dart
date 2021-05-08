@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'contact_screen.dart';
 import 'package:flash_chat/components/rounded_button.dart';
 import 'package:flash_chat/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
-import 'contact_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   static String id = 'login_screen';

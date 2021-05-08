@@ -1,8 +1,9 @@
-import 'package:flash_chat/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
+import 'welcome_screen.dart';
 import 'package:flash_chat/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 final _firestore = FirebaseFirestore.instance;
 String email;
@@ -123,6 +124,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       });
                       _firestore.collection('rooms').doc(room).update({
                         'lastMessage': messageText,
+                        'lastMessageTime': Timestamp.now(),
                       });
                     },
                     child: Text(
@@ -249,9 +251,10 @@ class MessageBubble extends StatelessWidget {
                 ? EdgeInsets.only(right: 8.0, top: 8.0)
                 : EdgeInsets.only(left: 8.0, top: 8.0),
             child: Text(
-              time.toDate().toLocal().hour.toString() +
-                  ':' +
-                  time.toDate().toLocal().minute.toString(),
+              // time.toDate().toLocal().hour.toString() +
+              //     ':' +
+              //     time.toDate().toLocal().minute.toString(),
+              DateFormat('h:mm a').format(time.toDate()),
               style: TextStyle(
                 fontSize: 13.0,
                 color: Colors.grey,
