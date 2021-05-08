@@ -45,6 +45,25 @@ class _ChatScreenState extends State<ChatScreen> {
     }).catchError((error) => print("Failed to get data: $error"));
   }
 
+  void sendMessage() {
+    messageTextController.clear();
+    //Implement send functionality.
+    _firestore
+        .collection('rooms')
+        .doc(room)
+        .collection('messages')
+        .doc(Timestamp.now().toString())
+        .set({
+      'text': messageText,
+      'sender': email,
+      'time': Timestamp.now(),
+    });
+    _firestore.collection('rooms').doc(room).update({
+      'lastMessage': messageText,
+      'lastMessageTime': Timestamp.now(),
+    });
+  }
+
   // void getMessages() async {
   //   final messages = await _firestore.collection('messages').get();
   //   for (var message in messages.docs) {
@@ -110,22 +129,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      messageTextController.clear();
-                      //Implement send functionality.
-                      _firestore
-                          .collection('rooms')
-                          .doc(room)
-                          .collection('messages')
-                          .doc(Timestamp.now().toString())
-                          .set({
-                        'text': messageText,
-                        'sender': email,
-                        'time': Timestamp.now(),
-                      });
-                      _firestore.collection('rooms').doc(room).update({
-                        'lastMessage': messageText,
-                        'lastMessageTime': Timestamp.now(),
-                      });
+                      sendMessage();
                     },
                     child: Text(
                       'Send',
