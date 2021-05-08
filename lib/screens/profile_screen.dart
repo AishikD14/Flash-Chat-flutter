@@ -5,6 +5,11 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+final _firestore = FirebaseFirestore.instance;
+String email;
+String name;
+String status;
+
 class ProfileScreen extends StatefulWidget {
   static String id = 'profile_screen';
 
@@ -16,11 +21,32 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen>
     with SingleTickerProviderStateMixin {
+  final _auth = FirebaseAuth.instance;
   AnimationController controller;
+  String nameText = '';
+  String statusText = '';
+
+  void getUserData() {
+    email = _auth.currentUser.email;
+    _firestore
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .get()
+        .then((value) {
+      name = value.docs.first.data()['userName'];
+      status = value.docs.first.data()['status'];
+      setState(() {
+        nameText = name;
+        statusText = status;
+      });
+    }).catchError((error) => print("Failed to get data: $error"));
+  }
 
   @override
   void initState() {
     super.initState();
+
+    getUserData();
 
     controller = AnimationController(
       vsync: this,
@@ -95,7 +121,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               ),
                             ),
                             Text(
-                              'Aishik Deb',
+                              nameText,
                               style: TextStyle(
                                 fontSize: 19.0,
                                 fontWeight: FontWeight.bold,
@@ -135,7 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               ),
                             ),
                             Text(
-                              'Hey there, I am using Flash Chat',
+                              statusText,
                               style: TextStyle(
                                 fontSize: 17.0,
                                 fontWeight: FontWeight.bold,
