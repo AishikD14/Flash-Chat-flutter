@@ -260,7 +260,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void getImageFromDB() async {
-    File displayImage;
     if (userDefaultImage == false) {
       try {
         String downloadUrl = await firebase_storage.FirebaseStorage.instance

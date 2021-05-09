@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 
 class ProfilePhotoScreen extends StatefulWidget {
   static String id = 'profile_photo_screen';
