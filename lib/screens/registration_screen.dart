@@ -98,94 +98,97 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: ModalProgressHUD(
-        inAsyncCall: showSpinner,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Flexible(
-                child: Hero(
-                  tag: 'logo',
-                  child: Container(
-                    height: 200.0,
-                    child: Image.asset('images/logo.png'),
+          inAsyncCall: showSpinner,
+          child: LayoutBuilder(builder: (context, viewportConstraints) {
+            return SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 24.0),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: viewportConstraints.maxHeight,
                   ),
-                ),
-              ),
-              SizedBox(
-                height: 48.0,
-              ),
-              registerError
-                  ? Text(
-                      errorText,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.red,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      Hero(
+                        tag: 'logo',
+                        child: Container(
+                          height: 200.0,
+                          child: Image.asset('images/logo.png'),
+                        ),
                       ),
-                    )
-                  : Container(),
-              registerError
-                  ? SizedBox(
-                      height: 8.0,
-                    )
-                  : Container(),
-              TextField(
-                controller: emailTextController,
-                keyboardType: TextInputType.emailAddress,
-                textAlign: TextAlign.center,
-                onChanged: (value) {
-                  //Do something with the user input.
-                  email = value;
-                },
-                decoration: kTextFieldDecoration.copyWith(
-                  hintText: 'Enter your email',
-                ),
-              ),
-              SizedBox(
-                height: 8.0,
-              ),
-              TextField(
-                controller: passwordTextController,
-                obscureText: true,
-                textAlign: TextAlign.center,
-                onChanged: (value) {
-                  //Do something with the user input.
-                  password = value;
-                },
-                decoration: kTextFieldDecoration.copyWith(
-                  hintText: 'Enter your password',
-                ),
-              ),
-              SizedBox(
-                height: 8.0,
-              ),
-              TextField(
-                controller: nameTextController,
-                textAlign: TextAlign.center,
-                onChanged: (value) {
-                  //Do something with the user input.
-                  name = value;
-                },
-                decoration: kTextFieldDecoration.copyWith(
-                  hintText: 'Enter your username',
-                ),
-              ),
-              SizedBox(
-                height: 24.0,
-              ),
-              RoundedButton(
-                colour: Colors.blueAccent,
-                buttonText: 'Register',
-                onPress: () {
-                  registerUser();
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+                      SizedBox(
+                        height: 48.0,
+                      ),
+                      registerError
+                          ? Text(
+                              errorText,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.red,
+                              ),
+                            )
+                          : Container(),
+                      registerError
+                          ? SizedBox(
+                              height: 8.0,
+                            )
+                          : Container(),
+                      TextField(
+                        controller: emailTextController,
+                        keyboardType: TextInputType.emailAddress,
+                        textAlign: TextAlign.center,
+                        onChanged: (value) {
+//Do something with the user input.
+                          email = value;
+                        },
+                        decoration: kTextFieldDecoration.copyWith(
+                          hintText: 'Enter your email',
+                        ),
+                      ),
+                      SizedBox(
+                        height: 8.0,
+                      ),
+                      TextField(
+                        controller: passwordTextController,
+                        obscureText: true,
+                        textAlign: TextAlign.center,
+                        onChanged: (value) {
+//Do something with the user input.
+                          password = value;
+                        },
+                        decoration: kTextFieldDecoration.copyWith(
+                          hintText: 'Enter your password',
+                        ),
+                      ),
+                      SizedBox(
+                        height: 8.0,
+                      ),
+                      TextField(
+                        controller: nameTextController,
+                        textAlign: TextAlign.center,
+                        onChanged: (value) {
+//Do something with the user input.
+                          name = value;
+                        },
+                        decoration: kTextFieldDecoration.copyWith(
+                          hintText: 'Enter your username',
+                        ),
+                      ),
+                      SizedBox(
+                        height: 24.0,
+                      ),
+                      RoundedButton(
+                        colour: Colors.blueAccent,
+                        buttonText: 'Register',
+                        onPress: () {
+                          registerUser();
+                        },
+                      ),
+                    ],
+                  ),
+                ));
+          })),
     );
   }
 }

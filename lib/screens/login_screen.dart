@@ -56,77 +56,84 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       body: ModalProgressHUD(
         inAsyncCall: showSpinner,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Flexible(
-                child: Hero(
-                  tag: 'logo',
-                  child: Container(
-                    height: 200.0,
-                    child: Image.asset('images/logo.png'),
-                  ),
+        child: LayoutBuilder(
+          builder: (context, viewportConstraints) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 24.0),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: viewportConstraints.maxHeight,
                 ),
-              ),
-              SizedBox(
-                height: 48.0,
-              ),
-              loginError
-                  ? Text(
-                      'Invalid email or password',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.red,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Hero(
+                      tag: 'logo',
+                      child: Container(
+                        height: 200.0,
+                        child: Image.asset('images/logo.png'),
                       ),
-                    )
-                  : Container(),
-              loginError
-                  ? SizedBox(
+                    ),
+                    SizedBox(
+                      height: 48.0,
+                    ),
+                    loginError
+                        ? Text(
+                            'Invalid email or password',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.red,
+                            ),
+                          )
+                        : Container(),
+                    loginError
+                        ? SizedBox(
+                            height: 8.0,
+                          )
+                        : Container(),
+                    TextField(
+                      controller: emailTextController,
+                      keyboardType: TextInputType.emailAddress,
+                      textAlign: TextAlign.center,
+                      onChanged: (value) {
+                        //Do something with the user input.
+                        email = value;
+                      },
+                      decoration: kTextFieldDecoration.copyWith(
+                        hintText: 'Enter your email',
+                      ),
+                    ),
+                    SizedBox(
                       height: 8.0,
-                    )
-                  : Container(),
-              TextField(
-                controller: emailTextController,
-                keyboardType: TextInputType.emailAddress,
-                textAlign: TextAlign.center,
-                onChanged: (value) {
-                  //Do something with the user input.
-                  email = value;
-                },
-                decoration: kTextFieldDecoration.copyWith(
-                  hintText: 'Enter your email',
+                    ),
+                    TextField(
+                      controller: passwordTextController,
+                      obscureText: true,
+                      textAlign: TextAlign.center,
+                      onChanged: (value) {
+                        //Do something with the user input.
+                        password = value;
+                      },
+                      decoration: kTextFieldDecoration.copyWith(
+                        hintText: 'Enter your password',
+                      ),
+                    ),
+                    SizedBox(
+                      height: 24.0,
+                    ),
+                    RoundedButton(
+                      colour: Colors.lightBlueAccent,
+                      buttonText: 'Log In',
+                      onPress: () {
+                        loginUser();
+                      },
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(
-                height: 8.0,
-              ),
-              TextField(
-                controller: passwordTextController,
-                obscureText: true,
-                textAlign: TextAlign.center,
-                onChanged: (value) {
-                  //Do something with the user input.
-                  password = value;
-                },
-                decoration: kTextFieldDecoration.copyWith(
-                  hintText: 'Enter your password',
-                ),
-              ),
-              SizedBox(
-                height: 24.0,
-              ),
-              RoundedButton(
-                colour: Colors.lightBlueAccent,
-                buttonText: 'Log In',
-                onPress: () {
-                  loginUser();
-                },
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
