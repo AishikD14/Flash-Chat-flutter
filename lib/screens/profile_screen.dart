@@ -1,7 +1,6 @@
-import 'package:flash_chat/components/rounded_button.dart';
 import 'package:flutter/material.dart';
+import 'profile_photo.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -63,6 +62,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   @override
+  void dispose() {
+    super.dispose();
+    controller.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -77,9 +82,23 @@ class _ProfileScreenState extends State<ProfileScreen>
               Stack(
                 alignment: AlignmentDirectional.bottomEnd,
                 children: [
-                  CircleAvatar(
-                    radius: 76.0,
-                    backgroundImage: AssetImage('images/avatar_default.png'),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(context, ProfilePhotoScreen.id);
+                    },
+                    child: Hero(
+                      tag: 'photo',
+                      child: Container(
+                        width: 170,
+                        height: 170,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                              image: AssetImage('images/avatar_default.png'),
+                              fit: BoxFit.fill),
+                        ),
+                      ),
+                    ),
                   ),
                   Material(
                     color: Colors.lightBlueAccent,
@@ -132,9 +151,80 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ),
                       ),
                     ),
-                    Icon(
-                      FontAwesomeIcons.pencilAlt,
-                      color: Colors.blue[500],
+                    GestureDetector(
+                      onTap: () async {
+                        showModalBottomSheet(
+                            context: context,
+                            builder: (context) {
+                              String modalName;
+                              TextEditingController nameController =
+                                  TextEditingController(text: name);
+                              nameController.selection = TextSelection(
+                                  baseOffset: 0,
+                                  extentOffset: nameController.text.length);
+                              return Padding(
+                                padding: const EdgeInsets.all(10.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      'Enter your name',
+                                      style: TextStyle(
+                                        fontSize: 18.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    TextField(
+                                      controller: nameController,
+                                      autofocus: true,
+                                      onChanged: (value) {
+                                        modalName = value;
+                                      },
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text('CANCEL'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            _firestore.collection('users')
+                                              ..where('email', isEqualTo: email)
+                                                  .get()
+                                                  .then((value) {
+                                                _firestore
+                                                    .collection('users')
+                                                    .doc(value.docs.first.id)
+                                                    .update({
+                                                  'userName': modalName,
+                                                }).then((val) {
+                                                  setState(() {
+                                                    nameText = modalName;
+                                                  });
+                                                  Navigator.pop(context);
+                                                }).catchError((error) => print(
+                                                        "Failed to update data: $error"));
+                                              }).catchError((error) => print(
+                                                      "Failed to get data: $error"));
+                                          },
+                                          child: Text('SUBMIT'),
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              );
+                            });
+                      },
+                      child: Icon(
+                        FontAwesomeIcons.pencilAlt,
+                        color: Colors.blue[500],
+                      ),
                     ),
                   ],
                 ),
@@ -172,9 +262,80 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ),
                       ),
                     ),
-                    Icon(
-                      FontAwesomeIcons.pencilAlt,
-                      color: Colors.blue[500],
+                    GestureDetector(
+                      onTap: () {
+                        showModalBottomSheet(
+                            context: context,
+                            builder: (context) {
+                              String modalStatus;
+                              TextEditingController statusController =
+                                  TextEditingController(text: status);
+                              statusController.selection = TextSelection(
+                                  baseOffset: 0,
+                                  extentOffset: statusController.text.length);
+                              return Padding(
+                                padding: const EdgeInsets.all(10.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      'Enter your status',
+                                      style: TextStyle(
+                                        fontSize: 18.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    TextField(
+                                      controller: statusController,
+                                      autofocus: true,
+                                      onChanged: (value) {
+                                        modalStatus = value;
+                                      },
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text('CANCEL'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            _firestore.collection('users')
+                                              ..where('email', isEqualTo: email)
+                                                  .get()
+                                                  .then((value) {
+                                                _firestore
+                                                    .collection('users')
+                                                    .doc(value.docs.first.id)
+                                                    .update({
+                                                  'status': modalStatus,
+                                                }).then((val) {
+                                                  setState(() {
+                                                    statusText = modalStatus;
+                                                  });
+                                                  Navigator.pop(context);
+                                                }).catchError((error) => print(
+                                                        "Failed to update data: $error"));
+                                              }).catchError((error) => print(
+                                                      "Failed to get data: $error"));
+                                          },
+                                          child: Text('SUBMIT'),
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              );
+                            });
+                      },
+                      child: Icon(
+                        FontAwesomeIcons.pencilAlt,
+                        color: Colors.blue[500],
+                      ),
                     ),
                   ],
                 ),
