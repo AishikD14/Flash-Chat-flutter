@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 class ProfilePhotoScreen extends StatefulWidget {
   static String id = 'profile_photo_screen';
+  final bool isDefault;
+  final ImageProvider image;
 
-  const ProfilePhotoScreen({Key key}) : super(key: key);
+  ProfilePhotoScreen({this.isDefault, this.image});
 
   @override
   _ProfilePhotoScreenState createState() => _ProfilePhotoScreenState();
@@ -31,7 +34,9 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> {
                     height: double.infinity,
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                          image: AssetImage('images/avatar_default.png'),
+                          image: widget.isDefault == true
+                              ? AssetImage('images/avatar_default.png')
+                              : widget.image,
                           fit: BoxFit.fill),
                     ),
                   ),
@@ -49,7 +54,9 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> {
                     height: double.infinity,
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                          image: AssetImage('images/avatar_default.png'),
+                          image: widget.isDefault == true
+                              ? AssetImage('images/avatar_default.png')
+                              : widget.image,
                           fit: BoxFit.fill),
                     ),
                   ),
