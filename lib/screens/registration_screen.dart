@@ -57,6 +57,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           'email': email,
           'userName': name,
           'status': 'Hey there, I am using Flash Chat !',
+          'defaultImage': true,
         }).then((val) {
           setState(() {
             showSpinner = false;
