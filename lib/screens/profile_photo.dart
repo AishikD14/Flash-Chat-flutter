@@ -18,22 +18,46 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> {
         backgroundColor: Colors.lightBlueAccent,
       ),
       backgroundColor: Colors.black,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 180.0),
-          child: Hero(
-            tag: 'photo',
-            child: Container(
-              width: double.infinity,
-              height: double.infinity,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                    image: AssetImage('images/avatar_default.png'),
-                    fit: BoxFit.fill),
+      body: OrientationBuilder(
+        builder: (context, orientation) {
+          if (orientation == Orientation.portrait) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 180.0),
+                child: Hero(
+                  tag: 'photo',
+                  child: Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                          image: AssetImage('images/avatar_default.png'),
+                          fit: BoxFit.fill),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ),
+            );
+          } else {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 240.0),
+                child: Hero(
+                  tag: 'photo',
+                  child: Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                          image: AssetImage('images/avatar_default.png'),
+                          fit: BoxFit.fill),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
+        },
       ),
     );
   }
