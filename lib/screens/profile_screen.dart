@@ -51,7 +51,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         setState(() {
           showSpinner = true;
         });
-        await firebase_storage.FirebaseStorage.instance
+        await storage
             .ref('profile/$encryptedEmail.png')
             .putFile(File(pickedFile.path));
         _firestore
@@ -263,9 +263,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   void getImageFromDB() async {
     if (userDefaultImage == false) {
       try {
-        String downloadUrl = await firebase_storage.FirebaseStorage.instance
-            .ref('profile/$encryptedEmail.png')
-            .getDownloadURL();
+        String downloadUrl =
+            await storage.ref('profile/$encryptedEmail.png').getDownloadURL();
         setState(() {
           imageWidget = Image.network(downloadUrl).image;
         });

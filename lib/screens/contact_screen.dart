@@ -5,9 +5,14 @@ import 'profile_screen.dart';
 import 'package:flash_chat/components/room-creation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:intl/intl.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 
 final _firestore = FirebaseFirestore.instance;
+firebase_storage.FirebaseStorage storage =
+    firebase_storage.FirebaseStorage.instance;
 String email;
 String name;
 
@@ -22,6 +27,7 @@ class ContactsScreen extends StatefulWidget {
 
 class _ContactsScreenState extends State<ContactsScreen> {
   final _auth = FirebaseAuth.instance;
+  ImageProvider pictureWidget = AssetImage('images/avatar_default.png');
 
   void updateLogin() {
     email = _auth.currentUser.email;
@@ -149,11 +155,27 @@ class ContactsStream extends StatelessWidget {
           }
           final contactName = contact.data()['userName'];
           final contactEmail = contact.data()['email'];
-          final contactBubble = ContactBubble(
-            contactName: contactName,
-            contactEmail: contactEmail,
-          );
-          contactBubbles.add(contactBubble);
+          final contactDefaultImage = contact.data()['defaultImage'];
+          if (contactDefaultImage == true) {
+            final contactBubble = ContactBubble(
+              contactName: contactName,
+              contactEmail: contactEmail,
+              isDefaultImage: true,
+            );
+            contactBubbles.add(contactBubble);
+          } else {
+            final encryptedEmail =
+                sha256.convert(utf8.encode(contactEmail)).toString();
+            final downloadUrl =
+                storage.ref('profile/$encryptedEmail.png').getDownloadURL();
+            final contactBubble = ContactBubble(
+              contactName: contactName,
+              contactEmail: contactEmail,
+              downloadUrl: downloadUrl,
+              isDefaultImage: false,
+            );
+            contactBubbles.add(contactBubble);
+          }
         }
         return ListView(
           padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
@@ -167,9 +189,15 @@ class ContactsStream extends StatelessWidget {
 class ContactBubble extends StatelessWidget {
   final String contactName;
   final String contactEmail;
+  final Future<String> downloadUrl;
+  final bool isDefaultImage;
   final RoomCreation room = RoomCreation();
 
-  ContactBubble({this.contactName, this.contactEmail});
+  ContactBubble(
+      {this.contactName,
+      this.contactEmail,
+      this.downloadUrl,
+      this.isDefaultImage});
 
   @override
   Widget build(BuildContext context) {
@@ -177,10 +205,27 @@ class ContactBubble extends StatelessWidget {
       padding: const EdgeInsets.all(8.0),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 28.0,
-            backgroundImage: AssetImage('images/avatar_default.png'),
-          ),
+          isDefaultImage
+              ? DefaultImageCircle()
+              : FutureBuilder(
+                  future: downloadUrl,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                              image: Image.network(snapshot.data).image,
+                              fit: BoxFit.fill),
+                        ),
+                      );
+                    } else {
+                      return DefaultImageCircle();
+                    }
+                  },
+                ),
           Expanded(
             child: GestureDetector(
               behavior: HitTestBehavior.translucent,
@@ -301,6 +346,21 @@ class LastMessageTime extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class DefaultImageCircle extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        image: DecorationImage(
+            image: AssetImage('images/avatar_default.png'), fit: BoxFit.fill),
+      ),
     );
   }
 }
