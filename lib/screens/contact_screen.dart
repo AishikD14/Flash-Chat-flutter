@@ -187,7 +187,7 @@ class ContactsStream extends StatelessWidget {
   }
 }
 
-class ContactBubble extends StatelessWidget {
+class ContactBubble extends StatefulWidget {
   final String contactName;
   final String contactEmail;
   final Future<String> downloadUrl;
@@ -200,6 +200,11 @@ class ContactBubble extends StatelessWidget {
       this.downloadUrl,
       this.isDefaultImage});
 
+  @override
+  _ContactBubbleState createState() => _ContactBubbleState();
+}
+
+class _ContactBubbleState extends State<ContactBubble> {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -215,10 +220,10 @@ class ContactBubble extends StatelessWidget {
                 },
               );
             },
-            child: isDefaultImage
+            child: widget.isDefaultImage
                 ? DefaultImageCircle()
                 : FutureBuilder(
-                    future: downloadUrl,
+                    future: widget.downloadUrl,
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         return Container(
@@ -241,13 +246,13 @@ class ContactBubble extends StatelessWidget {
             child: GestureDetector(
               behavior: HitTestBehavior.translucent,
               onTap: () async {
-                String roomId =
-                    await room.goToRoom(name, contactName, contactEmail);
+                String roomId = await widget.room
+                    .goToRoom(name, widget.contactName, widget.contactEmail);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => ChatScreen(
-                      chatName: contactName,
+                      chatName: widget.contactName,
                       roomId: roomId,
                     ),
                   ),
@@ -261,7 +266,7 @@ class ContactBubble extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: Text(
-                        contactName,
+                        widget.contactName,
                         style: TextStyle(
                           fontSize: 16.0,
                           fontWeight: FontWeight.bold,
@@ -269,7 +274,7 @@ class ContactBubble extends StatelessWidget {
                       ),
                     ),
                     LastMessage(
-                      contactEmail: contactEmail,
+                      contactEmail: widget.contactEmail,
                     ),
                   ],
                 ),
@@ -279,7 +284,7 @@ class ContactBubble extends StatelessWidget {
           Column(
             children: [
               LastMessageTime(
-                contactEmail: contactEmail,
+                contactEmail: widget.contactEmail,
               ),
             ],
           ),
