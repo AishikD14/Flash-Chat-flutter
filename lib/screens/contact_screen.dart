@@ -167,12 +167,10 @@ class ContactsStream extends StatelessWidget {
           } else {
             final encryptedEmail =
                 sha256.convert(utf8.encode(contactEmail)).toString();
-            final downloadUrl =
-                storage.ref('profile/$encryptedEmail.png').getDownloadURL();
             final contactBubble = ContactBubble(
               contactName: contactName,
               contactEmail: contactEmail,
-              downloadUrl: downloadUrl,
+              encryptedEmail: encryptedEmail,
               isDefaultImage: false,
             );
             contactBubbles.add(contactBubble);
@@ -190,14 +188,14 @@ class ContactsStream extends StatelessWidget {
 class ContactBubble extends StatefulWidget {
   final String contactName;
   final String contactEmail;
-  final Future<String> downloadUrl;
+  final String encryptedEmail;
   final bool isDefaultImage;
   final RoomCreation room = RoomCreation();
 
   ContactBubble(
       {this.contactName,
       this.contactEmail,
-      this.downloadUrl,
+      this.encryptedEmail,
       this.isDefaultImage});
 
   @override
@@ -205,6 +203,23 @@ class ContactBubble extends StatefulWidget {
 }
 
 class _ContactBubbleState extends State<ContactBubble> {
+  ImageProvider profileImage = AssetImage('images/avatar_default.png');
+
+  void getProfileImage() async {
+    final downloadUrl = await storage
+        .ref('profile/${widget.encryptedEmail}.png')
+        .getDownloadURL();
+    setState(() {
+      profileImage = Image.network(downloadUrl).image;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getProfileImage();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -216,30 +231,22 @@ class _ContactBubbleState extends State<ContactBubble> {
               showDialog(
                 context: context,
                 builder: (_) {
-                  return PictureOverlay();
+                  return PictureOverlay(
+                    profileImage: profileImage,
+                  );
                 },
               );
             },
             child: widget.isDefaultImage
                 ? DefaultImageCircle()
-                : FutureBuilder(
-                    future: widget.downloadUrl,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        return Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: DecorationImage(
-                                image: Image.network(snapshot.data).image,
-                                fit: BoxFit.fill),
-                          ),
-                        );
-                      } else {
-                        return DefaultImageCircle();
-                      }
-                    },
+                : Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      image: DecorationImage(
+                          image: profileImage, fit: BoxFit.fill),
+                    ),
                   ),
           ),
           Expanded(
@@ -367,7 +374,9 @@ class LastMessageTime extends StatelessWidget {
 }
 
 class PictureOverlay extends StatefulWidget {
-  const PictureOverlay({Key key}) : super(key: key);
+  final ImageProvider profileImage;
+
+  PictureOverlay({this.profileImage});
 
   @override
   _PictureOverlayState createState() => _PictureOverlayState();
@@ -401,14 +410,15 @@ class _PictureOverlayState extends State<PictureOverlay>
         color: Colors.transparent,
         child: ScaleTransition(
           scale: scaleAnimation,
-          child: Container(
-            decoration: ShapeDecoration(
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15.0))),
-            child: Padding(
-              padding: const EdgeInsets.all(50.0),
-              child: Text("Well hello there!"),
+          child: FractionallySizedBox(
+            widthFactor: 0.8,
+            heightFactor: 0.4,
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.rectangle,
+                image: DecorationImage(
+                    image: widget.profileImage, fit: BoxFit.fill),
+              ),
             ),
           ),
         ),
