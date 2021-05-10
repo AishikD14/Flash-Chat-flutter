@@ -259,6 +259,7 @@ class LastMessage extends StatelessWidget {
         }
         return Text(
           lastMessage,
+          maxLines: 1,
           style: TextStyle(
             color: Colors.grey,
           ),
