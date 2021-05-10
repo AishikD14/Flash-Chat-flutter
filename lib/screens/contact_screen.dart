@@ -3,6 +3,7 @@ import 'welcome_screen.dart';
 import 'chat_screen.dart';
 import 'profile_screen.dart';
 import 'package:flash_chat/components/room-creation.dart';
+import 'package:flash_chat/components/default_image_circle.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
@@ -205,27 +206,37 @@ class ContactBubble extends StatelessWidget {
       padding: const EdgeInsets.all(8.0),
       child: Row(
         children: [
-          isDefaultImage
-              ? DefaultImageCircle()
-              : FutureBuilder(
-                  future: downloadUrl,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          image: DecorationImage(
-                              image: Image.network(snapshot.data).image,
-                              fit: BoxFit.fill),
-                        ),
-                      );
-                    } else {
-                      return DefaultImageCircle();
-                    }
-                  },
-                ),
+          GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (_) {
+                  return PictureOverlay();
+                },
+              );
+            },
+            child: isDefaultImage
+                ? DefaultImageCircle()
+                : FutureBuilder(
+                    future: downloadUrl,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            image: DecorationImage(
+                                image: Image.network(snapshot.data).image,
+                                fit: BoxFit.fill),
+                          ),
+                        );
+                      } else {
+                        return DefaultImageCircle();
+                      }
+                    },
+                  ),
+          ),
           Expanded(
             child: GestureDetector(
               behavior: HitTestBehavior.translucent,
@@ -350,16 +361,52 @@ class LastMessageTime extends StatelessWidget {
   }
 }
 
-class DefaultImageCircle extends StatelessWidget {
+class PictureOverlay extends StatefulWidget {
+  const PictureOverlay({Key key}) : super(key: key);
+
+  @override
+  _PictureOverlayState createState() => _PictureOverlayState();
+}
+
+class _PictureOverlayState extends State<PictureOverlay>
+    with SingleTickerProviderStateMixin {
+  AnimationController controller;
+  Animation<double> scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    controller =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 250));
+    scaleAnimation =
+        CurvedAnimation(parent: controller, curve: Curves.decelerate);
+
+    controller.addListener(() {
+      setState(() {});
+    });
+
+    controller.forward();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        image: DecorationImage(
-            image: AssetImage('images/avatar_default.png'), fit: BoxFit.fill),
+    return Center(
+      child: Material(
+        color: Colors.transparent,
+        child: ScaleTransition(
+          scale: scaleAnimation,
+          child: Container(
+            decoration: ShapeDecoration(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15.0))),
+            child: Padding(
+              padding: const EdgeInsets.all(50.0),
+              child: Text("Well hello there!"),
+            ),
+          ),
+        ),
       ),
     );
   }
