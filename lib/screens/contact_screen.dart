@@ -214,6 +214,20 @@ class _ContactBubbleState extends State<ContactBubble> {
     });
   }
 
+  void openChat() async {
+    String roomId = await widget.room
+        .goToRoom(name, widget.contactName, widget.contactEmail);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatScreen(
+          chatName: widget.contactName,
+          roomId: roomId,
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -227,15 +241,19 @@ class _ContactBubbleState extends State<ContactBubble> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () {
-              showDialog(
+            onTap: () async {
+              String dialogClosed = await showDialog(
                 context: context,
                 builder: (_) {
                   return PictureOverlay(
                     profileImage: profileImage,
+                    contactName: widget.contactName,
                   );
                 },
               );
+              if (dialogClosed != null) {
+                openChat();
+              }
             },
             child: widget.isDefaultImage
                 ? DefaultImageCircle()
@@ -245,25 +263,15 @@ class _ContactBubbleState extends State<ContactBubble> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       image: DecorationImage(
-                          image: profileImage, fit: BoxFit.fill),
+                          image: profileImage, fit: BoxFit.cover),
                     ),
                   ),
           ),
           Expanded(
             child: GestureDetector(
               behavior: HitTestBehavior.translucent,
-              onTap: () async {
-                String roomId = await widget.room
-                    .goToRoom(name, widget.contactName, widget.contactEmail);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatScreen(
-                      chatName: widget.contactName,
-                      roomId: roomId,
-                    ),
-                  ),
-                );
+              onTap: () {
+                openChat();
               },
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -375,8 +383,9 @@ class LastMessageTime extends StatelessWidget {
 
 class PictureOverlay extends StatefulWidget {
   final ImageProvider profileImage;
+  final String contactName;
 
-  PictureOverlay({this.profileImage});
+  PictureOverlay({this.profileImage, this.contactName});
 
   @override
   _PictureOverlayState createState() => _PictureOverlayState();
@@ -404,22 +413,160 @@ class _PictureOverlayState extends State<PictureOverlay>
   }
 
   @override
+  void dispose() {
+    super.dispose();
+    controller.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Center(
       child: Material(
         color: Colors.transparent,
         child: ScaleTransition(
           scale: scaleAnimation,
-          child: FractionallySizedBox(
-            widthFactor: 0.8,
-            heightFactor: 0.4,
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.rectangle,
-                image: DecorationImage(
-                    image: widget.profileImage, fit: BoxFit.fill),
-              ),
-            ),
+          child: OrientationBuilder(
+            builder: (context, orientation) {
+              if (orientation == Orientation.portrait) {
+                return FractionallySizedBox(
+                  widthFactor: 0.7,
+                  heightFactor: 0.4,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey[800],
+                                shape: BoxShape.rectangle,
+                                image: DecorationImage(
+                                    image: widget.profileImage,
+                                    fit: BoxFit.fitHeight),
+                              ),
+                            ),
+                            Container(
+                              width: double.infinity,
+                              color: Colors.black.withOpacity(0.3),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  widget.contactName,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 17.0,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              width: double.infinity,
+                              color: Colors.lightBlueAccent,
+                              child: IconButton(
+                                color: Colors.white,
+                                icon: Icon(Icons.message),
+                                onPressed: () {
+                                  Navigator.pop(context, "goToChat");
+                                },
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(
+                              width: double.infinity,
+                              color: Colors.lightBlueAccent,
+                              child: IconButton(
+                                color: Colors.white,
+                                icon: Icon(Icons.info),
+                                onPressed: () {},
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                );
+              } else {
+                return FractionallySizedBox(
+                  widthFactor: 0.4,
+                  heightFactor: 0.8,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey[800],
+                                shape: BoxShape.rectangle,
+                                image: DecorationImage(
+                                    image: widget.profileImage,
+                                    fit: BoxFit.fitHeight),
+                              ),
+                            ),
+                            Container(
+                              width: double.infinity,
+                              color: Colors.black.withOpacity(0.3),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  widget.contactName,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 17.0,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              width: double.infinity,
+                              color: Colors.lightBlueAccent,
+                              child: IconButton(
+                                color: Colors.white,
+                                icon: Icon(Icons.message),
+                                onPressed: () {},
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(
+                              width: double.infinity,
+                              color: Colors.lightBlueAccent,
+                              child: IconButton(
+                                color: Colors.white,
+                                icon: Icon(Icons.info),
+                                onPressed: () {},
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                );
+              }
+            },
           ),
         ),
       ),
