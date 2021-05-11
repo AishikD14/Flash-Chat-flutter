@@ -8,6 +8,7 @@ import 'package:flash_chat/components/picture_overlay.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:intl/intl.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
@@ -31,8 +32,31 @@ class _ContactsScreenState extends State<ContactsScreen> {
   final _auth = FirebaseAuth.instance;
   ImageProvider pictureWidget = AssetImage('images/avatar_default.png');
 
-  void updateLogin() {
+  Future<void> saveTokenToDatabase(String token) async {
+    await _firestore
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .get()
+        .then((response) {
+      _firestore
+          .collection('users')
+          .doc(response.docs.first.id)
+          .update({
+            'tokens': FieldValue.arrayUnion([token]),
+          })
+          .then((val) => print('Token data updated'))
+          .catchError((error) => print("Failed to update token data: $error"));
+    });
+  }
+
+  void updateLogin() async {
     email = _auth.currentUser.email;
+    String token = await FirebaseMessaging.instance.getToken();
+
+    await saveTokenToDatabase(token);
+
+    FirebaseMessaging.instance.onTokenRefresh.listen(saveTokenToDatabase);
+
     _firestore
         .collection('users')
         .where('email', isEqualTo: email)
@@ -52,6 +76,22 @@ class _ContactsScreenState extends State<ContactsScreen> {
   void initState() {
     super.initState();
     updateLogin();
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      // Map<String, String> data = message.data;
+
+      // Owner owner = Owner.fromMap(jsonDecode(data['owner']));
+      // User user = User.fromMap(jsonDecode(data['user']));
+      // Picture picture = Picture.fromMap(jsonDecode(data['picture']));
+
+      // print('The user ${user.name} liked your picture "${picture.title}"!');
+
+      print('Message is ${message.data}');
+    });
+
+    // FirebaseMessaging.onBackgroundMessage((message) => {
+    //   print('Message is ${message.data}');
+    // });
   }
 
   @override
@@ -207,12 +247,16 @@ class _ContactBubbleState extends State<ContactBubble> {
   ImageProvider profileImage = AssetImage('images/avatar_default.png');
 
   void getProfileImage() async {
-    final downloadUrl = await storage
-        .ref('profile/${widget.encryptedEmail}.png')
-        .getDownloadURL();
-    setState(() {
-      profileImage = Image.network(downloadUrl).image;
-    });
+    try {
+      final downloadUrl = await storage
+          .ref('profile/${widget.encryptedEmail}.png')
+          .getDownloadURL();
+      setState(() {
+        profileImage = Image.network(downloadUrl).image;
+      });
+    } catch (e) {
+      print(e);
+    }
   }
 
   void openChat() async {
