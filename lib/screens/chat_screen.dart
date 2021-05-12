@@ -10,15 +10,17 @@ final _firestore = FirebaseFirestore.instance;
 String email;
 String room;
 String contactName;
+String contactEmail;
 String userName;
 bool group;
 
 class ChatScreen extends StatefulWidget {
   static String id = 'chat_screen';
   final String chatName;
+  final String chatEmail;
   final String roomId;
 
-  ChatScreen({this.chatName, this.roomId});
+  ChatScreen({this.chatName, this.roomId, this.chatEmail});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -65,7 +67,7 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     ChatNotification notification = ChatNotification();
-    notification.sendNotification(userName, messageText);
+    notification.sendNotification(userName, contactEmail, messageText);
   }
 
   // void getMessages() async {
@@ -90,6 +92,7 @@ class _ChatScreenState extends State<ChatScreen> {
     room = widget.roomId;
     checkIfGroup();
     contactName = widget.chatName;
+    contactEmail = widget.chatEmail;
   }
 
   @override

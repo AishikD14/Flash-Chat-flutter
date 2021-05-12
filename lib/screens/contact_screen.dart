@@ -268,6 +268,7 @@ class _ContactBubbleState extends State<ContactBubble> {
         builder: (context) => ChatScreen(
           chatName: widget.contactName,
           roomId: roomId,
+          chatEmail: widget.contactEmail,
         ),
       ),
     );

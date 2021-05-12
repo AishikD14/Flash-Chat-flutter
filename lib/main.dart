@@ -8,7 +8,7 @@ import 'package:flash_chat/screens/profile_screen.dart';
 import 'package:flash_chat/screens/profile_photo.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 bool loggedIn = false;
 
