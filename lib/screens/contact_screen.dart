@@ -255,7 +255,7 @@ class _ContactBubbleState extends State<ContactBubble> {
         profileImage = Image.network(downloadUrl).image;
       });
     } catch (e) {
-      print(e);
+      print("Image error is $e");
     }
   }
 
@@ -276,7 +276,9 @@ class _ContactBubbleState extends State<ContactBubble> {
   @override
   void initState() {
     super.initState();
-    getProfileImage();
+    if (!widget.isDefaultImage) {
+      getProfileImage();
+    }
   }
 
   @override

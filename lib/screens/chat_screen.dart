@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'welcome_screen.dart';
+import 'package:flash_chat/services/notification.dart';
 import 'package:flash_chat/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -62,6 +63,9 @@ class _ChatScreenState extends State<ChatScreen> {
       'lastMessage': messageText,
       'lastMessageTime': Timestamp.now(),
     });
+
+    ChatNotification notification = ChatNotification();
+    notification.sendNotification(userName, messageText);
   }
 
   // void getMessages() async {
