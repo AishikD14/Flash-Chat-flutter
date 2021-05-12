@@ -5,6 +5,7 @@ import 'profile_screen.dart';
 import 'package:flash_chat/components/room-creation.dart';
 import 'package:flash_chat/components/default_image_circle.dart';
 import 'package:flash_chat/components/picture_overlay.dart';
+import 'package:flash_chat/components/notification_plugin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
@@ -12,6 +13,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:intl/intl.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 final _firestore = FirebaseFirestore.instance;
 firebase_storage.FirebaseStorage storage =
@@ -31,6 +33,7 @@ class ContactsScreen extends StatefulWidget {
 class _ContactsScreenState extends State<ContactsScreen> {
   final _auth = FirebaseAuth.instance;
   ImageProvider pictureWidget = AssetImage('images/avatar_default.png');
+  NotificationPlugin notificationPlugin = NotificationPlugin();
 
   Future<void> saveTokenToDatabase(String token) async {
     await _firestore
@@ -72,26 +75,34 @@ class _ContactsScreenState extends State<ContactsScreen> {
     }).catchError((error) => print("Failed to get data: $error"));
   }
 
+  void setupNotification() async {
+    notificationPlugin.setOnNotificationClick(onNotificationClick);
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      RemoteNotification notification = message.notification;
+      AndroidNotification android = message.notification?.android;
+
+      // If `onMessage` is triggered with a notification, construct our own
+      // local notification to show to users using the created channel.
+      if (notification != null && android != null) {
+        print('Got a message whilst in the foreground!');
+        print(
+            'Message also contained a notification: ${message.notification.body}');
+
+        await notificationPlugin.showNotification(notification);
+      }
+    });
+  }
+
+  void onNotificationClick(String payload) {
+    print('Payload is $payload');
+  }
+
   @override
   void initState() {
     super.initState();
     updateLogin();
-
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      // Map<String, String> data = message.data;
-
-      // Owner owner = Owner.fromMap(jsonDecode(data['owner']));
-      // User user = User.fromMap(jsonDecode(data['user']));
-      // Picture picture = Picture.fromMap(jsonDecode(data['picture']));
-
-      // print('The user ${user.name} liked your picture "${picture.title}"!');
-
-      print('Message is ${message.data}');
-    });
-
-    // FirebaseMessaging.onBackgroundMessage((message) => {
-    //   print('Message is ${message.data}');
-    // });
+    setupNotification();
   }
 
   @override
