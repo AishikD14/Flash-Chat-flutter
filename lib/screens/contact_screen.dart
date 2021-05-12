@@ -13,7 +13,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:intl/intl.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 final _firestore = FirebaseFirestore.instance;
 firebase_storage.FirebaseStorage storage =
