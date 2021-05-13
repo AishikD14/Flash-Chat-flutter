@@ -102,17 +102,15 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
     RoomCreation room = RoomCreation();
     String roomId = await room.goToRoom(name, senderName, senderEmail);
-    // Navigator.of(context).pushAndRemoveUntil(newRoute, (route) => false)
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChatScreen(
-          chatName: senderName,
-          roomId: roomId,
-          chatEmail: senderEmail,
+    Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => ChatScreen(
+            chatName: senderName,
+            roomId: roomId,
+            chatEmail: senderEmail,
+          ),
         ),
-      ),
-    );
+        ModalRoute.withName(ContactsScreen.id));
   }
 
   @override
