@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -31,7 +33,8 @@ class NotificationPlugin {
     );
   }
 
-  Future<void> showNotification(RemoteNotification notification) async {
+  Future<void> showNotification(
+      RemoteNotification notification, Map<String, dynamic> payload) async {
     var androidChannelSpecifics = AndroidNotificationDetails(
       'flash_chat_channel',
       'Flash Chat Notifications',
@@ -44,6 +47,6 @@ class NotificationPlugin {
         NotificationDetails(android: androidChannelSpecifics);
     await flutterLocalNotificationsPlugin.show(notification.hashCode,
         notification.title, notification.body, platformChannelSpecifics,
-        payload: 'Test payload');
+        payload: jsonEncode(payload));
   }
 }

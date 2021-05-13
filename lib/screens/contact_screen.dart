@@ -79,6 +79,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       RemoteNotification notification = message.notification;
+      Map<String, dynamic> data = message.data;
       AndroidNotification android = message.notification?.android;
 
       // If `onMessage` is triggered with a notification, construct our own
@@ -88,13 +89,30 @@ class _ContactsScreenState extends State<ContactsScreen> {
         print(
             'Message also contained a notification: ${message.notification.body}');
 
-        await notificationPlugin.showNotification(notification);
+        await notificationPlugin.showNotification(notification, data);
       }
     });
   }
 
-  void onNotificationClick(String payload) {
-    print('Payload is $payload');
+  void onNotificationClick(String payload) async {
+    var decoded = jsonDecode(payload);
+    print(decoded);
+    String senderEmail = decoded["senderEmail"];
+    String senderName = decoded["senderName"];
+
+    RoomCreation room = RoomCreation();
+    String roomId = await room.goToRoom(name, senderName, senderEmail);
+    // Navigator.of(context).pushAndRemoveUntil(newRoute, (route) => false)
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatScreen(
+          chatName: senderName,
+          roomId: roomId,
+          chatEmail: senderEmail,
+        ),
+      ),
+    );
   }
 
   @override

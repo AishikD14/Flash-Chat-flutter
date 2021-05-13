@@ -67,7 +67,7 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     ChatNotification notification = ChatNotification();
-    notification.sendNotification(userName, contactEmail, messageText);
+    notification.sendNotification(userName, email, contactEmail, messageText);
   }
 
   // void getMessages() async {
