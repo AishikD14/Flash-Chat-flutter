@@ -13,12 +13,14 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:intl/intl.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
+import 'dart:async';
 
 final _firestore = FirebaseFirestore.instance;
 firebase_storage.FirebaseStorage storage =
     firebase_storage.FirebaseStorage.instance;
 String email;
 String name;
+// List<String> notificationEmail = [];
 
 class ContactsScreen extends StatefulWidget {
   static String id = 'contacts_screen';
@@ -33,6 +35,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
   final _auth = FirebaseAuth.instance;
   ImageProvider pictureWidget = AssetImage('images/avatar_default.png');
   NotificationPlugin notificationPlugin = NotificationPlugin();
+  String test = 'test';
 
   Future<void> saveTokenToDatabase(String token) async {
     await _firestore
@@ -75,12 +78,15 @@ class _ContactsScreenState extends State<ContactsScreen> {
   }
 
   void setupNotification() async {
+    // Foreground notification
     notificationPlugin.setOnNotificationClick(onNotificationClick);
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       RemoteNotification notification = message.notification;
       Map<String, dynamic> data = message.data;
       AndroidNotification android = message.notification?.android;
+
+      // notificationEmail.add(message.data["senderEmail"]);
 
       // If `onMessage` is triggered with a notification, construct our own
       // local notification to show to users using the created channel.
@@ -91,6 +97,62 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
         await notificationPlugin.showNotification(notification, data);
       }
+    });
+
+    // Get any messages which caused the application to open from
+    // a terminated state.
+    RemoteMessage initialMessage =
+        await FirebaseMessaging.instance.getInitialMessage();
+
+    // If the message also contains a data property with a "type" of "chat",
+    // navigate to a chat screen
+    if (initialMessage != null) {
+      print(initialMessage);
+      if (initialMessage?.data['type'] == 'chat') {
+        // Navigator.pushNamed(context, '/chat',
+        //     arguments: ChatArguments(initialMessage));
+        setState(() {
+          test = "done";
+        });
+        String senderEmail = initialMessage?.data["senderEmail"];
+        String senderName = initialMessage?.data["senderName"];
+
+        RoomCreation room = RoomCreation();
+        String roomId = await room.goToRoom(name, senderName, senderEmail);
+        await Future.delayed(Duration(seconds: 2));
+
+        Navigator.pushNamed(context, ProfileScreen.id);
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (context) => ChatScreen(
+        //       chatName: senderName,
+        //       roomId: roomId,
+        //       chatEmail: senderEmail,
+        //     ),
+        //   ),
+        // );
+      }
+    }
+
+    // Background notification
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
+      print('A new onMessageOpenedApp event was published!');
+      print(message.data);
+      String senderEmail = message.data["senderEmail"];
+      String senderName = message.data["senderName"];
+
+      RoomCreation room = RoomCreation();
+      String roomId = await room.goToRoom(name, senderName, senderEmail);
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => ChatScreen(
+              chatName: senderName,
+              roomId: roomId,
+              chatEmail: senderEmail,
+            ),
+          ),
+          ModalRoute.withName(ContactsScreen.id));
     });
   }
 
@@ -194,7 +256,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add),
           backgroundColor: Colors.lightBlueAccent,
-          tooltip: 'New chat',
+          tooltip: 'New chat $test',
           onPressed: () {},
         ),
       ),
@@ -372,6 +434,14 @@ class _ContactBubbleState extends State<ContactBubble> {
           ),
           Column(
             children: [
+              // Icon(
+              //   Icons.info,
+              //   color: Colors.lightBlueAccent,
+              //   size: 20.0,
+              // ),
+              // SizedBox(
+              //   height: 6.0,
+              // ),
               LastMessageTime(
                 contactEmail: widget.contactEmail,
               ),
